@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SpecSmith — raw documents to SRS</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,800;1,9..144,500&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&display=swap">
+<style>
+:root{--paper:#eee6d3;--card:#f8f2e4;--ink:#1c1a16;--mute:#6a6354;--rule:#cdc2a8;--stamp:#b5321a;--ok:#2d5b47;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#12161b;--card:#1a2027;--ink:#ece4d2;--mute:#98a0a8;--rule:#2c3640;--stamp:#ff7d5e;--ok:#7fc4a3;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#12161b;--card:#1a2027;--ink:#ece4d2;--mute:#98a0a8;--rule:#2c3640;--stamp:#ff7d5e;--ok:#7fc4a3;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.55 "IBM Plex Sans",system-ui,sans-serif;background-image:linear-gradient(color-mix(in srgb,var(--rule) 40%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--rule) 40%,transparent) 1px,transparent 1px);background-size:32px 32px}
+.wrap{max-width:900px;margin:0 auto;padding:22px 16px 60px}
+.mono,small,label.f,.k,.tag{font-family:"IBM Plex Mono",ui-monospace,monospace}
+header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;border-bottom:3px double var(--ink);padding-bottom:14px}
+h1{font:800 clamp(38px,9vw,64px)/.95 Fraunces,Georgia,serif;margin:0;letter-spacing:-.02em}
+h1 em{font-style:italic;font-weight:500;color:var(--stamp)}
+header p{margin:8px 0 0;color:var(--mute);max-width:46ch}
+.stamp{font:500 11px/1.3 "IBM Plex Mono",monospace;border:2px solid var(--stamp);color:var(--stamp);padding:6px 9px;transform:rotate(4deg);text-align:center;white-space:nowrap;margin-top:6px}
+#steps{display:grid;grid-template-columns:repeat(5,1fr);gap:0;list-style:none;padding:0;margin:18px 0}
+#steps button{all:unset;box-sizing:border-box;width:100%;cursor:pointer;padding:8px 4px 6px;border-top:4px solid var(--rule);font:500 11px/1.3 "IBM Plex Mono",monospace;color:var(--mute);text-transform:uppercase;letter-spacing:.04em}
+#steps button b{display:block;font:800 20px Fraunces,Georgia,serif;color:inherit}
+#steps button.on{border-color:var(--stamp);color:var(--ink)}#steps button.done{border-color:var(--ok);color:var(--ok)}
+#steps button:disabled{cursor:not-allowed;opacity:.55}
+section{background:var(--card);border:1px solid var(--ink);padding:0 0 20px;margin-bottom:18px}
+.sh{display:flex;justify-content:space-between;gap:10px;background:var(--ink);color:var(--paper);font:500 11px "IBM Plex Mono",monospace;letter-spacing:.08em;text-transform:uppercase;padding:7px 14px}
+section>*:not(.sh){margin-left:16px;margin-right:16px}
+h2{font:800 28px/1.1 Fraunces,Georgia,serif;margin:18px 16px 4px}
+.lead{color:var(--mute);margin-top:0}
+.row{display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px}
+@media(max-width:640px){.row{grid-template-columns:1fr}}
+label.f{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute);margin-bottom:4px}
+input[type=text],select,textarea{width:100%;font:15px "IBM Plex Sans",sans-serif;color:var(--ink);background:var(--paper);border:1px solid var(--ink);border-radius:0;padding:9px 10px}
+textarea{resize:vertical;line-height:1.5}
+:focus-visible{outline:3px solid var(--stamp);outline-offset:1px}
+.doc{border:1px dashed var(--mute);margin-top:12px;background:color-mix(in srgb,var(--paper) 50%,transparent)}
+.dh{display:flex;gap:8px;align-items:center;padding:6px 8px;border-bottom:1px dashed var(--mute);font:500 11px "IBM Plex Mono",monospace;color:var(--mute)}
+.dh input{border:0;background:transparent;border-bottom:1px solid var(--rule);padding:4px}
+.doc textarea{border:0;background:transparent}
+.btns{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:16px}
+button.b{font:500 12px "IBM Plex Mono",monospace;letter-spacing:.07em;text-transform:uppercase;background:var(--ink);color:var(--paper);border:1px solid var(--ink);border-radius:0;padding:11px 16px;cursor:pointer}
+button.b.p{background:var(--stamp);border-color:var(--stamp);color:#fff}
+button.b.g{background:transparent;color:var(--ink)}
+button.b:disabled{opacity:.45;cursor:wait}
+button.x{background:none;border:0;color:var(--mute);cursor:pointer;font-size:14px}
+.msg{min-height:22px;margin-top:10px;font:13px "IBM Plex Mono",monospace;color:var(--stamp)}
+.msg.w::before{content:"";display:inline-block;width:9px;height:9px;margin-right:8px;background:var(--stamp);animation:sp 1s steps(4) infinite}
+@keyframes sp{50%{transform:rotate(90deg) scale(.6)}}
+@media(prefers-reduced-motion:reduce){.msg.w::before{animation:none}}
+.meta{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:8px}
+@media(max-width:640px){.meta{grid-template-columns:1fr}}
+.meta div{border-left:3px solid var(--stamp);padding-left:10px}.meta p{margin:2px 0}
+.grp{font:800 18px Fraunces,Georgia,serif;margin:18px 0 6px;border-bottom:1px solid var(--rule)}
+.it{display:grid;grid-template-columns:22px 74px 1fr;gap:8px;align-items:start;padding:8px 0;border-bottom:1px solid var(--rule);cursor:pointer}
+.it input{margin-top:5px;accent-color:var(--stamp)}
+.k{font-size:10px;text-transform:uppercase;letter-spacing:.06em;border:1px solid var(--ink);padding:2px 4px;text-align:center;height:max-content}
+.it.off{opacity:.4;text-decoration:line-through}
+.it small{display:block;color:var(--mute);font-size:11px}
+.iss{border-left:5px solid var(--rule);padding:6px 0 6px 12px;margin:10px 16px}
+.iss.high{border-color:var(--stamp)}.iss.med{border-color:#c98a1b}
+.tag{font-size:10px;text-transform:uppercase;letter-spacing:.06em;background:var(--ink);color:var(--paper);padding:1px 5px;margin-right:6px}
+.iss p{margin:4px 0}.iss .fx{color:var(--ok)}
+.paper{margin:16px;padding:22px 20px;background:#fffdf6;color:#1c1a16;border:1px solid var(--ink);box-shadow:0 0 0 5px var(--card),0 0 0 6px var(--ink);font:15px/1.6 "IBM Plex Sans",sans-serif;overflow-wrap:anywhere}
+.paper h1{font:800 30px/1.1 Fraunces,Georgia,serif;margin:0 0 12px}.paper h2{margin:26px 0 6px;font-size:22px;border-bottom:2px solid #1c1a16}
+.paper h3,.paper h4{font:800 17px Fraunces,Georgia,serif;margin:18px 0 4px}
+.paper mark{background:#f3d36b;color:#1c1a16;padding:0 3px;font-family:"IBM Plex Mono",monospace;font-size:12px}
+.paper code{font-family:"IBM Plex Mono",monospace;font-size:13px;background:#eee6d3;padding:0 3px}
+.tw{overflow-x:auto;margin:8px 0}
+.paper table{border-collapse:collapse;font-size:13px;min-width:560px;width:100%}
+.paper th,.paper td{border:1px solid #bdb394;padding:6px 8px;text-align:left;vertical-align:top}.paper th{background:#e6dcc3;font-family:"IBM Plex Mono",monospace;font-size:11px;text-transform:uppercase}
+.paper:empty{display:none}
+</style></head>
+<body><div class="wrap">
+<header><div><h1>Spec<em>Smith</em></h1><p>Feed it the messy paperwork. Get back a traceable, testable Software Requirements Specification.</p></div><div class="stamp">IEEE 29148<br>FORM SRS-01</div></header>
+<ol id="steps"></ol>
+<main>
+<section id="s1"><div class="sh"><span>Station 01</span><span>Intake</span></div>
+<h2>Bring the raw material</h2><p class="lead">Emails, meeting notes, SOPs, RFP text, chat logs. Paste text or load .txt, .md, .csv, .json files. Nothing is invented later, so more source means better specs.</p>
+<div class="row"><div><label class="f" for="co">Company and what the software is for</label><input type="text" id="co" placeholder="e.g. Northwind Distributors, field sales app"></div>
+<div><label class="f" for="aud">Audience</label><select id="aud"><option>Developers</option><option>Client</option><option>Management</option></select></div>
+<div><label class="f" for="dep">Depth</label><select id="dep"><option>Quick</option><option selected>Standard</option><option>Detailed</option></select></div></div>
+<div id="docs"></div>
+<div class="btns"><button class="b g" id="add">+ Add document</button><button class="b g" id="fl">Load files</button><button class="b g" id="smp">Try sample</button><span class="mono" id="cnt" style="font-size:12px;color:var(--mute)"></span><input type="file" id="fi" multiple accept=".txt,.md,.csv,.json,.eml,.log,text/*" hidden></div>
+<div class="btns"><button class="b p" id="go1">Assay the documents →</button></div><div class="msg" id="m1" role="status"></div></section>
+
+<section id="s2" hidden><div class="sh"><span>Station 02</span><span>Sort the ore</span></div>
+<h2>What did we dig out?</h2><p class="lead">Digest and extraction are done. Untick anything that is noise, then forge the draft.</p>
+<div class="meta" id="meta"></div><div id="ore"></div>
+<div class="btns"><button class="b g" data-go="1">← Intake</button><button class="b p" id="go2">Forge the SRS →</button><span class="mono" id="kept" style="font-size:12px;color:var(--mute)"></span></div><div class="msg" id="m2" role="status"></div></section>
+
+<section id="s3" hidden><div class="sh"><span>Station 03</span><span>Draft on the bench</span></div>
+<h2>The draft takes shape</h2><p class="lead">Streaming live. When it stops, run the audit: a second reviewer hunts for vague, untestable, duplicate and unsourced items.</p>
+<div class="btns"><button class="b g" data-go="2">← Ore</button><button class="b p" id="go3" disabled>Audit the draft →</button></div><div class="msg" id="m3" role="status"></div></section>
+
+<section id="s4" hidden><div class="sh"><span>Station 04</span><span>QA audit</span></div>
+<h2>Flaws found</h2><p class="lead">Keep the fixes you agree with. The revision rewrites the whole SRS around them.</p>
+<div id="iss"></div>
+<div class="btns"><button class="b g" data-go="3">← Draft</button><button class="b p" id="go4">Forge the revision →</button><button class="b g" id="skip">Ship as is</button></div><div class="msg" id="m4" role="status"></div></section>
+
+<section id="s5" hidden><div class="sh"><span>Station 05</span><span>Ship</span></div>
+<h2>Ready to hand over</h2><p class="lead">Review it once more, then take it with you.</p>
+<div class="btns"><button class="b p" id="dmd" disabled>Download .md</button><button class="b" id="dht" disabled>Download .html</button><button class="b g" id="cp" disabled>Copy text</button><button class="b g" data-go="4">← Audit</button><button class="b g" id="nw">New job</button></div><div class="msg" id="m5" role="status"></div></section>
+</main>
+<article id="paper" class="paper"></article>
+</div>
+<script>
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const S={docs:[{n:"",t:""}],items:[],meta:{},srs:"",issues:[],max:1,sm:null};
+const SAMPLE={co:"Northwind Distributors, field sales and invoicing app",docs:[{n:"Ops meeting notes",t:"Field staff keep losing paper invoices. Managers want to see sales by region every Monday. Must work in areas with bad internet. Finance says invoices need a unique number and cannot be edited after submission."},{n:"Email from Sales Head",t:"We have about 60 reps. Customers must get a PDF copy by WhatsApp or email. Tax rate differs by state. Please keep it simple for reps, many are not tech-savvy. Regional managers are in a different system today, so reports should be exportable."}]};
+const RULES=`You are SpecSmith, a senior business analyst writing to IEEE 29148. Golden rules: (1) NEVER INVENT: every requirement cites its source document and a short quote; tag inferences [INFERRED]; put gaps in Open Questions. (2) One requirement = one testable statement; use shall (mandatory), should (desirable), may (optional); no "and/or" compounds. (3) Ban vague words (fast, easy, secure, scalable, user-friendly, etc.): quantify them or log them as ambiguities. (4) Keep business goals, functional, non-functional, constraints and assumptions separate. (5) Surface conflicts between sources; never choose silently. (6) Mask personal or confidential data as [REDACTED]. Plain, precise English, active voice, even if the sources are in other languages.`;
+const FORM=`Output Markdown only, in this order: title; a version/date/status table; a 5-line Executive Summary (problem, users, top 5 features, biggest risks, biggest unknowns); 1 Introduction (purpose, scope, definitions, references); 2 Overall Description (product perspective, user classes, operating environment, constraints, assumptions and dependencies); 3 Functional Requirements grouped by feature; 4 External Interfaces; 5 Non-Functional Requirements; 6 Data Requirements; 7 Business Rules; 8 Out of Scope; Appendix A Traceability Matrix; B Open Questions (with who should answer); C Ambiguity and Conflict Log; D Suggested Next Steps (risks, MVP cut). Every requirement is a table row: | ID | Statement | Priority (MoSCoW) | Source | Acceptance (Given/When/Then) | Confidence |, with IDs FR-001, NFR-001, BR-001. If input is too thin, write a partial SRS plus sharp questions; do not bluff.`;
+const DEPTH={Quick:"Keep it to about 5 pages: essentials only.",Standard:"Standard length: complete but economical.",Detailed:"Detailed: full acceptance criteria and rich appendices."};
+const esc=s=>s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+const inl=s=>esc(s).replace(/&lt;br\s*\/?&gt;/g,"<br>").replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/`(.+?)`/g,"<code>$1</code>").replace(/\[(INFERRED|REDACTED)\]/g,"<mark>[$1]</mark>");
+function md(t){const L=t.split("\n");let o="",i=0,m;while(i<L.length){const l=L[i];
+if(/^\s*\|/.test(l)){const r=[];while(i<L.length&&/^\s*\|/.test(L[i]))r.push(L[i++]);const c=x=>x.trim().replace(/^\||\|$/g,"").split("|").map(z=>inl(z.trim()));const h=c(r[0]),sep=/^[\s|:-]+$/.test(r[1]||"");
+o+="<div class=tw><table><tr>"+h.map(z=>"<th>"+z+"</th>").join("")+"</tr>"+r.slice(sep?2:1).map(x=>"<tr>"+c(x).map(z=>"<td>"+z+"</td>").join("")+"</tr>").join("")+"</table></div>";continue}
+if(m=l.match(/^(#{1,4})\s+(.*)/))o+=`<h${m[1].length}>${inl(m[2])}</h${m[1].length}>`;
+else if(/^\s*[-*]\s+/.test(l)){let u="";while(i<L.length&&(m=L[i].match(/^\s*[-*]\s+(.*)/))){u+="<li>"+inl(m[1])+"</li>";i++}o+="<ul>"+u+"</ul>";continue}
+else if(l.trim()&&!/^```/.test(l))o+="<p>"+inl(l)+"</p>";i++}return o}
+function say(id,t,w){const e=$("#"+id);e.textContent=t||"";e.className="msg"+(w?" w":"")}
+async function run(b,m,msg,f){const B=$("#"+b);B.disabled=true;say(m,msg,1);try{await f();say(m,"")}catch(e){say(m,e.code==="rate_limited"?"Rate limited. Wait a moment and retry.":e.code==="not_granted"?"Permission to ask Claude was not granted.":e.message||"That failed. Try again.")}B.disabled=false}
+let AC="";
+async function ai(p,o={}){const call=()=>fetch("/api/claude",{method:"POST",headers:{"content-type":"application/json","x-access-code":AC},body:JSON.stringify({prompt:p})});
+let r=await call();if(r.status===401){AC=prompt("Access code?")||"";if(!AC)throw{message:"Access code required."};r=await call()}
+if(!r.ok)throw{message:r.status===401?"Wrong access code.":r.status===429?"Rate limited. Wait a moment and retry.":"Server error "+r.status+". Check the API key setup."};
+const rd=r.body.getReader(),dc=new TextDecoder();let t="";for(;;){const{done,value}=await rd.read();if(done)break;t+=dc.decode(value,{stream:true});if(o.on)o.on(t.replace("\u0001CUT",""))}
+if(t.includes("\u0001CUT")){S.cut=1;t=t.replace("\u0001CUT","")}
+return o.json?JSON.parse(t.replace(/^\s*```(?:json)?\s*|\s*```\s*$/g,"").trim()):t}
+function steps(){$("#steps").innerHTML=["Intake","Ore","Draft","Audit","Ship"].map((n,i)=>`<li><button data-go="${i+1}"><b>0${i+1}</b>${n}</button></li>`).join("")}
+function go(n){S.cur=n;S.max=Math.max(S.max,n);$$("main>section").forEach((s,i)=>s.hidden=i+1!==n);$$("#steps button").forEach((b,i)=>{b.disabled=i+1>S.max;b.className=i+1===n?"on":i+1<S.max?"done":""});
+if(n===3||n===5)$("#s"+n).insertBefore($("#paper"),$("#s"+n+" .btns"));else document.body.append($("#paper"));$("#paper").hidden=!(n===3||n===5);scrollTo({top:0,behavior:"smooth"})}
+document.addEventListener("click",e=>{const g=e.target.closest("[data-go]");if(g&&!g.disabled)go(+g.dataset.go)});
+function count(){const w=S.docs.reduce((a,d)=>a+(d.t.trim()?d.t.trim().split(/\s+/).length:0),0);$("#cnt").textContent=S.docs.length+" doc(s) · "+w+" words"}
+function drawDocs(){const w=$("#docs");w.innerHTML="";S.docs.forEach((d,i)=>{const e=document.createElement("div");e.className="doc";e.innerHTML=`<div class="dh"><span>DOC ${String(i+1).padStart(2,"0")}</span><input type="text" aria-label="Document name" placeholder="Document name, e.g. Kickoff email"><button class="x" title="Remove" aria-label="Remove document">✕</button></div><textarea rows="6" aria-label="Document text" placeholder="Paste the raw text here…"></textarea>`;
+const n=$("input",e),x=$("button",e),t=$("textarea",e);n.value=d.n;t.value=d.t;n.oninput=()=>d.n=n.value;t.oninput=()=>{d.t=t.value;count()};x.onclick=()=>{S.docs.splice(i,1);if(!S.docs.length)S.docs.push({n:"",t:""});drawDocs()};w.append(e)});count()}
+$("#add").onclick=()=>{S.docs.push({n:"",t:""});drawDocs()};
+$("#smp").onclick=()=>{$("#co").value=SAMPLE.co;S.docs=SAMPLE.docs.map(d=>({...d}));drawDocs()};
+$("#fl").onclick=()=>$("#fi").click();
+$("#fi").onchange=async e=>{const fs=[...e.target.files];if(!fs.length)return;if(S.docs.length===1&&!S.docs[0].t.trim())S.docs=[];for(const f of fs)S.docs.push({n:f.name,t:(await f.text()).slice(0,20000)});e.target.value="";drawDocs()};
+const KIND={need:"Need",rule:"Rule",constraint:"Limit",integration:"Link",pain:"Pain",assumption:"Assume"};
+function drawOre(){const M=S.meta;$("#meta").innerHTML=`<div><label class="f">Project</label><p><b>${inl(M.project||"Untitled")}</b></p></div><div><label class="f">Domain</label><p>${inl(M.domain||"")}</p></div><div><label class="f">Core problem</label><p>${inl(M.problem||"")}</p></div><div><label class="f">Users</label><p>${inl((M.users||[]).join(", "))}</p></div>`;
+const o=$("#ore");o.innerHTML="";Object.keys(KIND).forEach(k=>{const xs=S.items.filter(i=>i.kind===k);if(!xs.length)return;o.insertAdjacentHTML("beforeend",`<div class="grp">${KIND[k]}s · ${xs.length}</div>`);xs.forEach(it=>{const l=document.createElement("label");l.className="it";l.innerHTML=`<input type="checkbox" checked><span class="k">${k}</span><span>${inl(it.text)}<small>${inl(it.doc||"")} — “${inl(it.quote||"")}”</small></span>`;const c=$("input",l);c.onchange=()=>{it.keep=c.checked;l.classList.toggle("off",!c.checked);kept()};o.append(l)})});kept()}
+function kept(){$("#kept").textContent=S.items.filter(i=>i.keep).length+" of "+S.items.length+" kept"}
+$("#go1").onclick=()=>{const docs=S.docs.filter(d=>d.t.trim());if(!docs.length)return say("m1","Add at least one document first.");
+S.ctx={co:$("#co").value||"not stated",aud:$("#aud").value,dep:$("#dep").value};
+run("go1","m1","Reading every document…",async()=>{const src=docs.map((d,i)=>`--- Document ${i+1}: ${d.n||"untitled"} ---\n${d.t.slice(0,14000)}`).join("\n");S.src=src;
+const r=await ai(`${RULES}\nRead the raw company documents and return ONLY JSON: {"project":"","domain":"","problem":"one sentence","users":[""],"items":[{"kind":"need|rule|constraint|integration|pain|assumption","text":"one clear sentence","doc":"document name","quote":"under 15 words"}]}. Max 40 items, no duplicates.\nCompany context: ${S.ctx.co}\n${src}`,{json:true});
+S.meta=r;S.items=(r.items||[]).map(x=>({...x,keep:true}));if(!S.items.length)throw{message:"Nothing usable was found. Add more detail and try again."};drawOre();go(2)})};
+$("#go2").onclick=()=>{const k=S.items.filter(i=>i.keep);if(!k.length)return say("m2","Keep at least one item.");go(3);S.cut=0;$("#go3").disabled=true;$("#paper").innerHTML="";
+run("go2","m3","Drafting… watch the page fill in.",async()=>{S.srs=await ai(`${RULES}\n${FORM}\n${DEPTH[S.ctx.dep]} Audience: ${S.ctx.aud}.\nCompany context: ${S.ctx.co}\nProject digest: ${JSON.stringify(S.meta)}\nApproved extracted items: ${JSON.stringify(k.map(({kind,text,doc,quote})=>({kind,text,doc,quote})))}`,{on:t=>$("#paper").innerHTML=md(t)});$("#paper").innerHTML=md(S.srs);$("#go3").disabled=false;if(S.cut)say("m3","Hit the length limit. Try Quick depth or fewer items.")})};
+$("#go3").onclick=()=>run("go3","m3","Reviewer is hunting for flaws…",async()=>{const r=await ai(`Act as a strict QA reviewer of this SRS. Return ONLY a JSON array (max 15) of {"ref":"requirement ID or section","sev":"high|med|low","type":"vague|untestable|duplicate|conflict|no-source|missing-criteria","problem":"short","fix":"concrete rewrite or action"}. Return [] if clean.\n\n${S.srs}`,{json:true});S.issues=(Array.isArray(r)?r:[]).map(x=>({...x,use:true}));drawIss();go(4)});
+function drawIss(){const o=$("#iss");o.innerHTML="";if(!S.issues.length)o.innerHTML='<p class="lead" style="margin:16px">No flaws found. Clean forge.</p>';S.issues.forEach(x=>{const d=document.createElement("div");d.className="iss "+x.sev;d.innerHTML=`<label><input type="checkbox" checked> <span class="tag">${inl(x.sev||"low")}</span><b>${inl(x.ref||"")}</b> · ${inl(x.type||"")}</label><p>${inl(x.problem||"")}</p><p class="fx">Fix: ${inl(x.fix||"")}</p>`;$("input",d).onchange=e=>x.use=e.target.checked;o.append(d)})}
+function ship(){["dmd","dht","cp"].forEach(i=>$("#"+i).disabled=false)}
+$("#skip").onclick=()=>{go(5);ship()};
+$("#go4").onclick=()=>{const u=S.issues.filter(x=>x.use);if(!u.length){go(5);return ship()}go(5);["dmd","dht","cp"].forEach(i=>$("#"+i).disabled=true);S.cut=0;
+run("go4","m5","Rewriting the SRS around the fixes…",async()=>{S.srs=await ai(`${RULES}\n${FORM}\nRewrite this SRS as a complete corrected document, applying every fix below and changing nothing else.\nFixes: ${JSON.stringify(u)}\n\nSRS:\n${S.srs}`,{on:t=>$("#paper").innerHTML=md(t)});$("#paper").innerHTML=md(S.srs);ship();if(S.cut)say("m5","Hit the length limit; the end may be cut. Try Quick depth.")})};
+function save(name,data){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([data],{type:"text/plain"}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+const slug=()=>(S.meta.project||"srs").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40);
+$("#dmd").onclick=()=>save(`SRS-${slug()}.md`,S.srs);
+$("#dht").onclick=()=>save(`SRS-${slug()}.html`,`<!DOCTYPE html><meta charset="utf-8"><title>SRS</title><style>body{font:15px/1.6 Georgia,serif;max-width:900px;margin:30px auto;padding:0 16px}table{border-collapse:collapse;font-size:13px}td,th{border:1px solid #999;padding:5px 7px;vertical-align:top}th{background:#eee}</style>${md(S.srs)}`);
+$("#cp").onclick=async()=>{try{await navigator.clipboard.writeText(S.srs);say("m5","Copied.")}catch(e){say("m5","Copy blocked here. Use Download instead.")}};
+$("#nw").onclick=()=>{S.docs=[{n:"",t:""}];S.items=[];S.srs="";S.max=1;$("#paper").innerHTML="";drawDocs();go(1)};
+steps();drawDocs();go(1);
+</script></body></html>
