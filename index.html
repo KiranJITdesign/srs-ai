@@ -119,11 +119,11 @@ if(m=l.match(/^(#{1,4})\s+(.*)/))o+=`<h${m[1].length}>${inl(m[2])}</h${m[1].leng
 else if(/^\s*[-*]\s+/.test(l)){let u="";while(i<L.length&&(m=L[i].match(/^\s*[-*]\s+(.*)/))){u+="<li>"+inl(m[1])+"</li>";i++}o+="<ul>"+u+"</ul>";continue}
 else if(l.trim()&&!/^```/.test(l))o+="<p>"+inl(l)+"</p>";i++}return o}
 function say(id,t,w){const e=$("#"+id);e.textContent=t||"";e.className="msg"+(w?" w":"")}
-async function run(b,m,msg,f){const B=$("#"+b);B.disabled=true;say(m,msg,1);try{await f();say(m,"")}catch(e){say(m,e.code==="rate_limited"?"Rate limited. Wait a moment and retry.":e.code==="not_granted"?"Permission to ask Claude was not granted.":e.message||"That failed. Try again.")}B.disabled=false}
+async function run(b,m,msg,f){const B=$("#"+b);B.disabled=true;say(m,msg,1);try{await f();say(m,"")}catch(e){say(m,e.code==="rate_limited"?"Rate limited. Wait a moment and retry.":e.code==="not_granted"?"Permission to ask Groq was not granted.":e.message||"That failed. Try again.")}B.disabled=false}
 let AC="";
-async function ai(p,o={}){const call=()=>fetch("/api/claude",{method:"POST",headers:{"content-type":"application/json","x-access-code":AC},body:JSON.stringify({prompt:p})});
+async function ai(p,o={}){const call=()=>fetch("/api/groq",{method:"POST",headers:{"content-type":"application/json","x-access-code":AC},body:JSON.stringify({prompt:p})});
 let r=await call();if(r.status===401){AC=prompt("Access code?")||"";if(!AC)throw{message:"Access code required."};r=await call()}
-if(!r.ok)throw{message:r.status===401?"Wrong access code.":r.status===429?"Rate limited. Wait a moment and retry.":"Server error "+r.status+". Check the API key setup."};
+if(!r.ok){let detail="";if(r.headers.get("content-type")?.includes("application/json")){const body=await r.json();detail=body.error||""}throw{message:r.status===401?"Wrong access code.":detail||`Server error ${r.status}. Check the Groq API key setup.`}}
 const rd=r.body.getReader(),dc=new TextDecoder();let t="";for(;;){const{done,value}=await rd.read();if(done)break;t+=dc.decode(value,{stream:true});if(o.on)o.on(t.replace("\u0001CUT",""))}
 if(t.includes("\u0001CUT")){S.cut=1;t=t.replace("\u0001CUT","")}
 return o.json?JSON.parse(t.replace(/^\s*```(?:json)?\s*|\s*```\s*$/g,"").trim()):t}
